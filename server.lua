@@ -17,19 +17,19 @@ end
 
 --- As requested to make it easier to seperate jobs to certain logs. As you can see this just uses `qb-log:CreateLog` event. Simply change the unique name
 --- of the webhook as seen here. 'shiftlogPolice', 'shiftlogAmbulance', etc. Update your qb-logs resource accordingly. Add as many in here as you want.
-local function CreateLog(Player)
+local function CreateLog(Player, source)
     if Player.Job == 'police' then
         TriggerEvent('qb-log:server:CreateLog', 'shiftlogPolice', 'Shift Log Police', 'green',
-        string.format("**%s** (CitizenID: %s | ID: %s) \n**Started Shift:** %s. \n**Stopped Shift:** %s. \n**Job:** %s \n**Duration:** %s minutes",
-        Player.Name, Player.CID, src, Player.StartDate, os.date("%d/%m/%Y %H:%M:%S"), Player.Label, round(os.difftime(os.time(), Player.StartTime) / 60, 2)))
+        string.format("**%s** (CitizenID: %s | ID: %s) \n**Name:** %s \n**Started Shift:** %s. \n**Stopped Shift:** %s. \n**Job:** %s \n**Duration:** %s minutes",
+        Player.Name, Player.CID, source, Player.ICName, Player.StartDate, os.date("%d/%m/%Y %H:%M:%S"), Player.Label, round(os.difftime(os.time(), Player.StartTime) / 60, 2)))
     elseif Player.Job == 'ambulance' then
         TriggerEvent('qb-log:server:CreateLog', 'shiftlogAmbulance', 'Shift Log EMS', 'green',
-        string.format("**%s** (CitizenID: %s | ID: %s) \n**Started Shift:** %s. \n**Stopped Shift:** %s. \n**Job:** %s \n**Duration:** %s minutes",
-        Player.Name, Player.CID, src, Player.StartDate, os.date("%d/%m/%Y %H:%M:%S"), Player.Label, round(os.difftime(os.time(), Player.StartTime) / 60, 2)))
+        string.format("**%s** (CitizenID: %s | ID: %s) \n**Name:** %s \n**Started Shift:** %s. \n**Stopped Shift:** %s. \n**Job:** %s \n**Duration:** %s minutes",
+        Player.Name, Player.CID, source, Player.ICName, Player.StartDate, os.date("%d/%m/%Y %H:%M:%S"), Player.Label, round(os.difftime(os.time(), Player.StartTime) / 60, 2)))
     elseif Player.Job == 'realestate' then
         TriggerEvent('qb-log:server:CreateLog', 'shiftlogRealestate', 'Shift Log Realestate', 'green',
-        string.format("**%s** (CitizenID: %s | ID: %s) \n**Started Shift:** %s. \n**Stopped Shift:** %s. \n**Job:** %s \n**Duration:** %s minutes",
-        Player.Name, Player.CID, src, Player.StartDate, os.date("%d/%m/%Y %H:%M:%S"), Player.Label, round(os.difftime(os.time(), Player.StartTime) / 60, 2)))
+        string.format("**%s** (CitizenID: %s | ID: %s) \n**Name:** %s \n**Started Shift:** %s. \n**Stopped Shift:** %s. \n**Job:** %s \n**Duration:** %s minutes",
+        Player.Name, Player.CID, source, Player.ICName, Player.StartDate, os.date("%d/%m/%Y %H:%M:%S"), Player.Label, round(os.difftime(os.time(), Player.StartTime) / 60, 2)))
     end
 end
 
@@ -37,6 +37,7 @@ AddEventHandler('QBCore:Server:PlayerLoaded', function(Player)
     if not HasJob(Player.PlayerData.job.name) then return end
     OnlinePlayers[#OnlinePlayers + 1] = {
         Name = GetPlayerName(Player.PlayerData.source),
+        ICName = Player.PlayerData.charinfo.firstname .. ' ' .. Player.PlayerData.charinfo.lastname,
         CID = Player.PlayerData.citizenid,
         Job = Player.PlayerData.job.name,
         Label = Player.PlayerData.job.label,
@@ -54,7 +55,7 @@ RegisterNetEvent('qb-shiftlog:server:OnPlayerUnload', function()
     if not HasJob(Player.Job) then return end
 
     if Player.Duty then
-        CreateLog(Player)
+        CreateLog(Player, src)
     end
 end)
 
@@ -66,7 +67,7 @@ AddEventHandler("playerDropped", function()
     if not HasJob(Player.Job) then return end
 
     if Player.Duty then
-        CreateLog(Player)
+        CreateLog(Player, src)
     end
 end)
 
@@ -79,20 +80,20 @@ RegisterNetEvent('qb-shiftlog:server:SetPlayerData', function(NewPlayer)
     --- Check if the job has changed
     if NewPlayer.job.label ~= OldPlayer.Label then
         if OldPlayer.Duty then
-            OnlinePlayers[src] = {Name = GetPlayerName(NewPlayer.source), CID = NewPlayer.citizenid, Job = NewPlayer.job.name, Label = NewPlayer.job.label, Duty = NewPlayer.job.onduty, StartDate = os.date("%d/%m/%Y %H:%M:%S"), StartTime = os.time()}
+            OnlinePlayers[src] = {Name = GetPlayerName(NewPlayer.source), ICName = NewPlayer.charinfo.firstname.. ' ' ..NewPlayer.charinfo.lastname, CID = NewPlayer.citizenid, Job = NewPlayer.job.name, Label = NewPlayer.job.label, Duty = NewPlayer.job.onduty, StartDate = os.date("%d/%m/%Y %H:%M:%S"), StartTime = os.time()}
             if not HasJob(OldPlayer.Job) then return end
-            CreateLog(OldPlayer)
+            CreateLog(OldPlayer, src)
         else
-            OnlinePlayers[src] = {Name = GetPlayerName(NewPlayer.source), CID = NewPlayer.citizenid, Job = NewPlayer.job.name, Label = NewPlayer.job.label, Duty = NewPlayer.job.onduty, StartDate = os.date("%d/%m/%Y %H:%M:%S"), StartTime = os.time()}
+            OnlinePlayers[src] = {Name = GetPlayerName(NewPlayer.source), ICName = NewPlayer.charinfo.firstname.. ' ' ..NewPlayer.charinfo.lastname, CID = NewPlayer.citizenid, Job = NewPlayer.job.name, Label = NewPlayer.job.label, Duty = NewPlayer.job.onduty, StartDate = os.date("%d/%m/%Y %H:%M:%S"), StartTime = os.time()}
         end
     end
 
     --- Check if the duty has changed.
     if not NewPlayer.job.onduty and OldPlayer.Duty then
-        OnlinePlayers[src] = {Name = GetPlayerName(NewPlayer.source), CID = NewPlayer.citizenid, Job = NewPlayer.job.name, Label = NewPlayer.job.label, Duty = NewPlayer.job.onduty, StartDate = os.date("%d/%m/%Y %H:%M:%S"), StartTime = os.time()}
+        OnlinePlayers[src] = {Name = GetPlayerName(NewPlayer.source), ICName = NewPlayer.charinfo.firstname.. ' ' ..NewPlayer.charinfo.lastname, CID = NewPlayer.citizenid, Job = NewPlayer.job.name, Label = NewPlayer.job.label, Duty = NewPlayer.job.onduty, StartDate = os.date("%d/%m/%Y %H:%M:%S"), StartTime = os.time()}
         if not HasJob(OldPlayer.Job) then return end
-        CreateLog(OldPlayer)
+        CreateLog(OldPlayer, src)
     elseif not OldPlayer.Duty and NewPlayer.job.onduty then
-        OnlinePlayers[src] = {Name = GetPlayerName(NewPlayer.source), CID = NewPlayer.citizenid, Job = NewPlayer.job.name, Label = NewPlayer.job.label, Duty = NewPlayer.job.onduty, StartDate = os.date("%d/%m/%Y %H:%M:%S"), StartTime = os.time()}
+        OnlinePlayers[src] = {Name = GetPlayerName(NewPlayer.source), ICName = NewPlayer.charinfo.firstname.. ' ' ..NewPlayer.charinfo.lastname, CID = NewPlayer.citizenid, Job = NewPlayer.job.name, Label = NewPlayer.job.label, Duty = NewPlayer.job.onduty, StartDate = os.date("%d/%m/%Y %H:%M:%S"), StartTime = os.time()}
     end
 end)
