@@ -15,6 +15,24 @@ local function HasJob(Job)
     return false
 end
 
+--- As requested to make it easier to seperate jobs to certain logs. As you can see this just uses `qb-log:CreateLog` event. Simply change the unique name
+--- of the webhook as seen here. 'shiftlogPolice', 'shiftlogAmbulance', etc. Update your qb-logs resource accordingly. Add as many in here as you want.
+local function CreateLog(Player)
+    if Player.Job == 'police' then
+        TriggerEvent('qb-log:server:CreateLog', 'shiftlogPolice', 'Shift Log Police', 'green',
+        string.format("**%s** (CitizenID: %s | ID: %s) \n**Started Shift:** %s. \n**Stopped Shift:** %s. \n**Job:** %s \n**Duration:** %s minutes",
+        Player.Name, Player.CID, src, Player.StartDate, os.date("%d/%m/%Y %H:%M:%S"), Player.Label, round(os.difftime(os.time(), Player.StartTime) / 60, 2)))
+    elseif Player.Job == 'ambulance' then
+        TriggerEvent('qb-log:server:CreateLog', 'shiftlogAmbulance', 'Shift Log EMS', 'green',
+        string.format("**%s** (CitizenID: %s | ID: %s) \n**Started Shift:** %s. \n**Stopped Shift:** %s. \n**Job:** %s \n**Duration:** %s minutes",
+        Player.Name, Player.CID, src, Player.StartDate, os.date("%d/%m/%Y %H:%M:%S"), Player.Label, round(os.difftime(os.time(), Player.StartTime) / 60, 2)))
+    elseif Player.Job == 'realestate' then
+        TriggerEvent('qb-log:server:CreateLog', 'shiftlogRealestate', 'Shift Log Realestate', 'green',
+        string.format("**%s** (CitizenID: %s | ID: %s) \n**Started Shift:** %s. \n**Stopped Shift:** %s. \n**Job:** %s \n**Duration:** %s minutes",
+        Player.Name, Player.CID, src, Player.StartDate, os.date("%d/%m/%Y %H:%M:%S"), Player.Label, round(os.difftime(os.time(), Player.StartTime) / 60, 2)))
+    end
+end
+
 AddEventHandler('QBCore:Server:PlayerLoaded', function(Player)
     if not HasJob(Player.PlayerData.job.name) then return end
     OnlinePlayers[#OnlinePlayers + 1] = {
@@ -36,9 +54,7 @@ RegisterNetEvent('qb-shiftlog:server:OnPlayerUnload', function()
     if not HasJob(Player.Job) then return end
 
     if Player.Duty then
-        TriggerEvent('qb-log:server:CreateLog', 'shiftlog', 'Shift Log', 'green',
-        string.format("**%s** (CitizenID: %s | ID: %s) \n**Started Shift:** %s. \n**Stopped Shift:** %s. \n**Job:** %s \n**Duration:** %s minutes",
-        Player.Name, Player.CID, src, Player.StartDate, os.date("%d/%m/%Y %H:%M:%S"), Player.Label, round(os.difftime(os.time(), Player.StartTime) / 60, 2)))
+        CreateLog(Player)
     end
 end)
 
@@ -50,9 +66,7 @@ AddEventHandler("playerDropped", function()
     if not HasJob(Player.Job) then return end
 
     if Player.Duty then
-        TriggerEvent('qb-log:server:CreateLog', 'shiftlog', 'Shift Log', 'green',
-        string.format("**%s** (CitizenID: %s | ID: %s) \n**Started Shift:** %s. \n**Stopped Shift:** %s. \n**Job:** %s \n**Duration:** %s minutes",
-        Player.Name, Player.CID, src, Player.StartDate, os.date("%d/%m/%Y %H:%M:%S"), Player.Label, round(os.difftime(os.time(), Player.StartTime) / 60, 2)))
+        CreateLog(Player)
     end
 end)
 
@@ -67,9 +81,7 @@ RegisterNetEvent('qb-shiftlog:server:SetPlayerData', function(NewPlayer)
         if OldPlayer.Duty then
             OnlinePlayers[src] = {Name = GetPlayerName(NewPlayer.source), CID = NewPlayer.citizenid, Job = NewPlayer.job.name, Label = NewPlayer.job.label, Duty = NewPlayer.job.onduty, StartDate = os.date("%d/%m/%Y %H:%M:%S"), StartTime = os.time()}
             if not HasJob(OldPlayer.Job) then return end
-            TriggerEvent('qb-log:server:CreateLog', 'shiftlog', 'Shift Log', 'green',
-            string.format("**%s** (CitizenID: %s | ID: %s) \n**Started Shift:** %s. \n**Stopped Shift:** %s. \n**Job:** %s \n**Duration:** %s minutes",
-            OldPlayer.Name, OldPlayer.CID, src, OldPlayer.StartDate, os.date("%d/%m/%Y %H:%M:%S"), OldPlayer.Label, round(os.difftime(os.time(), OldPlayer.StartTime) / 60, 2)))
+            CreateLog(OldPlayer)
         else
             OnlinePlayers[src] = {Name = GetPlayerName(NewPlayer.source), CID = NewPlayer.citizenid, Job = NewPlayer.job.name, Label = NewPlayer.job.label, Duty = NewPlayer.job.onduty, StartDate = os.date("%d/%m/%Y %H:%M:%S"), StartTime = os.time()}
         end
@@ -79,9 +91,7 @@ RegisterNetEvent('qb-shiftlog:server:SetPlayerData', function(NewPlayer)
     if not NewPlayer.job.onduty and OldPlayer.Duty then
         OnlinePlayers[src] = {Name = GetPlayerName(NewPlayer.source), CID = NewPlayer.citizenid, Job = NewPlayer.job.name, Label = NewPlayer.job.label, Duty = NewPlayer.job.onduty, StartDate = os.date("%d/%m/%Y %H:%M:%S"), StartTime = os.time()}
         if not HasJob(OldPlayer.Job) then return end
-        TriggerEvent('qb-log:server:CreateLog', 'shiftlog', 'Shift Log', 'green',
-        string.format("**%s** (CitizenID: %s | ID: %s) \n**Started Shift:** %s. \n**Stopped Shift:** %s. \n**Job:** %s \n**Duration:** %s minutes",
-        OldPlayer.Name, OldPlayer.CID, src, OldPlayer.StartDate, os.date("%d/%m/%Y %H:%M:%S"), OldPlayer.Label, round(os.difftime(os.time(), OldPlayer.StartTime) / 60, 2)))
+        CreateLog(OldPlayer)
     elseif not OldPlayer.Duty and NewPlayer.job.onduty then
         OnlinePlayers[src] = {Name = GetPlayerName(NewPlayer.source), CID = NewPlayer.citizenid, Job = NewPlayer.job.name, Label = NewPlayer.job.label, Duty = NewPlayer.job.onduty, StartDate = os.date("%d/%m/%Y %H:%M:%S"), StartTime = os.time()}
     end
