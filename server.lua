@@ -1,5 +1,10 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 local OnlinePlayers = {}
+local Jobs = { --- Add specific jobs here to check. So that unemployed etc doesn't get logged.
+    'police',
+    'ambulance',
+    'realestate'
+}
 
 --- Standard round function
 local function round(num, numDecimalPlaces)
@@ -9,8 +14,10 @@ end
 
 --- Add specific jobs here to check. So that unemployed etc doesn't get logged.
 local function HasJob(Job)
-    if Job == 'police' or Job == 'ambulance' or Job == 'realestate' or Job == 'taxi' then
-        return true
+    for i = 1, #Jobs do
+        if Jobs[i] == Job then
+            return true
+        end
     end
     return false
 end
@@ -56,6 +63,9 @@ RegisterNetEvent('qb-shiftlog:server:OnPlayerUnload', function()
 
     if Player.Duty then
         CreateLog(Player, src)
+        local JobCurrentTime = GetResourceKvpFloat(Player.Job)
+        JobTotalTime = JobCurrentTime + os.difftime(os.time(), Player.StartTime) / 60
+        SetResourceKvpFloat(Player.Job, JobTotalTime)
     end
 end)
 
@@ -68,6 +78,9 @@ AddEventHandler("playerDropped", function()
 
     if Player.Duty then
         CreateLog(Player, src)
+        local JobCurrentTime = GetResourceKvpFloat(Player.Job)
+        JobTotalTime = JobCurrentTime + os.difftime(os.time(), Player.StartTime) / 60
+        SetResourceKvpFloat(Player.Job, JobTotalTime)
     end
 end)
 
@@ -83,6 +96,9 @@ RegisterNetEvent('qb-shiftlog:server:SetPlayerData', function(NewPlayer)
             OnlinePlayers[src] = {Name = GetPlayerName(NewPlayer.source), ICName = NewPlayer.charinfo.firstname.. ' ' ..NewPlayer.charinfo.lastname, CID = NewPlayer.citizenid, Job = NewPlayer.job.name, Label = NewPlayer.job.label, Duty = NewPlayer.job.onduty, StartDate = os.date("%d/%m/%Y %H:%M:%S"), StartTime = os.time()}
             if not HasJob(OldPlayer.Job) then return end
             CreateLog(OldPlayer, src)
+            local JobCurrentTime = GetResourceKvpFloat(OldPlayer.Job)
+            JobTotalTime = JobCurrentTime + os.difftime(os.time(), OldPlayer.StartTime )/ 60
+            SetResourceKvpFloat(OldPlayer.Job, JobTotalTime)
         else
             OnlinePlayers[src] = {Name = GetPlayerName(NewPlayer.source), ICName = NewPlayer.charinfo.firstname.. ' ' ..NewPlayer.charinfo.lastname, CID = NewPlayer.citizenid, Job = NewPlayer.job.name, Label = NewPlayer.job.label, Duty = NewPlayer.job.onduty, StartDate = os.date("%d/%m/%Y %H:%M:%S"), StartTime = os.time()}
         end
@@ -93,7 +109,28 @@ RegisterNetEvent('qb-shiftlog:server:SetPlayerData', function(NewPlayer)
         OnlinePlayers[src] = {Name = GetPlayerName(NewPlayer.source), ICName = NewPlayer.charinfo.firstname.. ' ' ..NewPlayer.charinfo.lastname, CID = NewPlayer.citizenid, Job = NewPlayer.job.name, Label = NewPlayer.job.label, Duty = NewPlayer.job.onduty, StartDate = os.date("%d/%m/%Y %H:%M:%S"), StartTime = os.time()}
         if not HasJob(OldPlayer.Job) then return end
         CreateLog(OldPlayer, src)
+        local JobCurrentTime = GetResourceKvpFloat(OldPlayer.Job)
+        JobTotalTime = JobCurrentTime + os.difftime(os.time(), OldPlayer.StartTime) / 60
+        SetResourceKvpFloat(OldPlayer.Job, JobTotalTime)
     elseif not OldPlayer.Duty and NewPlayer.job.onduty then
         OnlinePlayers[src] = {Name = GetPlayerName(NewPlayer.source), ICName = NewPlayer.charinfo.firstname.. ' ' ..NewPlayer.charinfo.lastname, CID = NewPlayer.citizenid, Job = NewPlayer.job.name, Label = NewPlayer.job.label, Duty = NewPlayer.job.onduty, StartDate = os.date("%d/%m/%Y %H:%M:%S"), StartTime = os.time()}
+    end
+end)
+
+CreateThread(function()
+    while true do
+        local JobCurrentTimes = {}
+        for i = 1, #Jobs do
+            JobCurrentTimes[i] = {
+                Name = Jobs[i],
+                Time = GetResourceKvpFloat(Jobs[i])
+            }
+        end
+        table.sort(JobCurrentTimes, function(a, b) return a.Time > b.Time end)
+        TriggerEvent('qb-log:server:CreateLog', 'shiftlogJobLeaderboard', 'Shift Log Job Leaderboard', 'green',
+        string.format("1. %s | %s minutes \n2. %s | %s minutes \n3. %s | %s minutes \n4. %s | %s minutes \n5. %s | %s minutes \n6. %s | %s minutes \n7. %s | %s minutes \n8. %s | %s minutes",
+        JobCurrentTimes[1].Name, round(JobCurrentTimes[1].Time, 2), JobCurrentTimes[2].Name, round(JobCurrentTimes[2].Time, 2), JobCurrentTimes[3].Name, round(JobCurrentTimes[3].Time, 2), JobCurrentTimes[4].Name, round(JobCurrentTimes[4].Time, 2),
+        JobCurrentTimes[5].Name, round(JobCurrentTimes[5].Time, 2), JobCurrentTimes[6].Name, round(JobCurrentTimes[6].Time, 2), JobCurrentTimes[7].Name, round(JobCurrentTimes[7].Time, 2), JobCurrentTimes[8].Name, round(JobCurrentTimes[8].Time, 2)))
+        Wait(720000) -- Post log every 12 minutes
     end
 end)
