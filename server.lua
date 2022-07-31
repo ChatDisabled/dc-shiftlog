@@ -1,6 +1,6 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 local OnlinePlayers = {}
-local Jobs = { --- Add specific jobs here to check. So that unemployed etc doesn't get logged.
+local Jobs = { --- Add specific jobs here to check. So that unemployed etc doesn't get logged. Don't forget to update the leaderboard down below.
     'police',
     'ambulance',
     'realestate'
@@ -12,7 +12,6 @@ local function round(num, numDecimalPlaces)
     return math.floor(num * mult + 0.5) / mult
 end
 
---- Add specific jobs here to check. So that unemployed etc doesn't get logged.
 local function HasJob(Job)
     for i = 1, #Jobs do
         if Jobs[i] == Job then
@@ -128,9 +127,15 @@ CreateThread(function()
         end
         table.sort(JobCurrentTimes, function(a, b) return a.Time > b.Time end)
         TriggerEvent('qb-log:server:CreateLog', 'shiftlogJobLeaderboard', 'Shift Log Job Leaderboard', 'green',
-        string.format("1. %s | %s minutes \n2. %s | %s minutes \n3. %s | %s minutes \n4. %s | %s minutes \n5. %s | %s minutes \n6. %s | %s minutes \n7. %s | %s minutes \n8. %s | %s minutes",
-        JobCurrentTimes[1].Name, round(JobCurrentTimes[1].Time, 2), JobCurrentTimes[2].Name, round(JobCurrentTimes[2].Time, 2), JobCurrentTimes[3].Name, round(JobCurrentTimes[3].Time, 2), JobCurrentTimes[4].Name, round(JobCurrentTimes[4].Time, 2),
-        JobCurrentTimes[5].Name, round(JobCurrentTimes[5].Time, 2), JobCurrentTimes[6].Name, round(JobCurrentTimes[6].Time, 2), JobCurrentTimes[7].Name, round(JobCurrentTimes[7].Time, 2), JobCurrentTimes[8].Name, round(JobCurrentTimes[8].Time, 2)))
+        string.format("1. %s | %s minutes \n2. %s | %s minutes \n3. %s | %s minutes",
+        JobCurrentTimes[1].Name, round(JobCurrentTimes[1].Time, 2), JobCurrentTimes[2].Name, round(JobCurrentTimes[2].Time, 2), JobCurrentTimes[3].Name, round(JobCurrentTimes[3].Time, 2)))
         Wait(720000) -- Post log every 12 minutes
     end
 end)
+
+--- Example on how to increase the leaderboard if you want to add more jobs
+
+-- TriggerEvent('qb-log:server:CreateLog', 'shiftlogJobLeaderboard', 'Shift Log Job Leaderboard', 'green',
+-- string.format("1. %s | %s minutes \n2. %s | %s minutes \n3. %s | %s minutes \n4. %s | %s minutes \n5. %s | %s minutes \n6. %s | %s minutes \n7. %s | %s minutes \n8. %s | %s minutes",
+-- JobCurrentTimes[1].Name, round(JobCurrentTimes[1].Time, 2), JobCurrentTimes[2].Name, round(JobCurrentTimes[2].Time, 2), JobCurrentTimes[3].Name, round(JobCurrentTimes[3].Time, 2), JobCurrentTimes[4].Name, round(JobCurrentTimes[4].Time, 2),
+-- JobCurrentTimes[5].Name, round(JobCurrentTimes[5].Time, 2), JobCurrentTimes[6].Name, round(JobCurrentTimes[6].Time, 2), JobCurrentTimes[7].Name, round(JobCurrentTimes[7].Time, 2), JobCurrentTimes[8].Name, round(JobCurrentTimes[8].Time, 2)))
