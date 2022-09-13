@@ -24,18 +24,20 @@ end
 --- As requested to make it easier to seperate jobs to certain logs. As you can see this just uses `qb-log:CreateLog` event. Simply change the unique name
 --- of the webhook as seen here. 'shiftlogPolice', 'shiftlogAmbulance', etc. Update your qb-logs resource accordingly. Add as many in here as you want.
 local function CreateLog(Player, source)
-    if Player.Job == 'police' then
-        TriggerEvent('qb-log:server:CreateLog', 'shiftlogPolice', 'Shift Log Police', 'green',
-        string.format("**%s** (CitizenID: %s | ID: %s) \n**Name:** %s \n**Started Shift:** %s. \n**Stopped Shift:** %s. \n**Job:** %s \n**Duration:** %s minutes",
-        Player.Name, Player.CID, source, Player.ICName, Player.StartDate, os.date("%d/%m/%Y %H:%M:%S"), Player.Label, round(os.difftime(os.time(), Player.StartTime) / 60, 2)))
-    elseif Player.Job == 'ambulance' then
-        TriggerEvent('qb-log:server:CreateLog', 'shiftlogAmbulance', 'Shift Log EMS', 'green',
-        string.format("**%s** (CitizenID: %s | ID: %s) \n**Name:** %s \n**Started Shift:** %s. \n**Stopped Shift:** %s. \n**Job:** %s \n**Duration:** %s minutes",
-        Player.Name, Player.CID, source, Player.ICName, Player.StartDate, os.date("%d/%m/%Y %H:%M:%S"), Player.Label, round(os.difftime(os.time(), Player.StartTime) / 60, 2)))
-    elseif Player.Job == 'realestate' then
-        TriggerEvent('qb-log:server:CreateLog', 'shiftlogRealestate', 'Shift Log Realestate', 'green',
-        string.format("**%s** (CitizenID: %s | ID: %s) \n**Name:** %s \n**Started Shift:** %s. \n**Stopped Shift:** %s. \n**Job:** %s \n**Duration:** %s minutes",
-        Player.Name, Player.CID, source, Player.ICName, Player.StartDate, os.date("%d/%m/%Y %H:%M:%S"), Player.Label, round(os.difftime(os.time(), Player.StartTime) / 60, 2)))
+    if Config.logs then
+        if Player.Job == 'police' then
+            TriggerEvent('qb-log:server:CreateLog', 'shiftlogPolice', 'Shift Log Police', 'green',
+            string.format("**%s** (CitizenID: %s | ID: %s) \n**Name:** %s \n**Started Shift:** %s. \n**Stopped Shift:** %s. \n**Job:** %s \n**Duration:** %s minutes",
+            Player.Name, Player.CID, source, Player.ICName, Player.StartDate, os.date("%d/%m/%Y %H:%M:%S"), Player.Label, round(os.difftime(os.time(), Player.StartTime) / 60, 2)))
+        elseif Player.Job == 'ambulance' then
+            TriggerEvent('qb-log:server:CreateLog', 'shiftlogAmbulance', 'Shift Log EMS', 'green',
+            string.format("**%s** (CitizenID: %s | ID: %s) \n**Name:** %s \n**Started Shift:** %s. \n**Stopped Shift:** %s. \n**Job:** %s \n**Duration:** %s minutes",
+            Player.Name, Player.CID, source, Player.ICName, Player.StartDate, os.date("%d/%m/%Y %H:%M:%S"), Player.Label, round(os.difftime(os.time(), Player.StartTime) / 60, 2)))
+        elseif Player.Job == 'realestate' then
+            TriggerEvent('qb-log:server:CreateLog', 'shiftlogRealestate', 'Shift Log Realestate', 'green',
+            string.format("**%s** (CitizenID: %s | ID: %s) \n**Name:** %s \n**Started Shift:** %s. \n**Stopped Shift:** %s. \n**Job:** %s \n**Duration:** %s minutes",
+            Player.Name, Player.CID, source, Player.ICName, Player.StartDate, os.date("%d/%m/%Y %H:%M:%S"), Player.Label, round(os.difftime(os.time(), Player.StartTime) / 60, 2)))
+        end
     end
 end
 
@@ -117,19 +119,21 @@ RegisterNetEvent('qb-shiftlog:server:SetPlayerData', function(NewPlayer)
 end)
 
 CreateThread(function()
-    while true do
-        local JobCurrentTimes = {}
-        for i = 1, #Jobs do
-            JobCurrentTimes[i] = {
-                Name = Jobs[i],
-                Time = GetResourceKvpFloat(Jobs[i])
-            }
+    if Config.leaderboard.enabled then 
+        while true do
+            local JobCurrentTimes = {}
+            for i = 1, #Jobs do
+                JobCurrentTimes[i] = {
+                    Name = Jobs[i],
+                    Time = GetResourceKvpFloat(Jobs[i])
+                }
+            end
+            table.sort(JobCurrentTimes, function(a, b) return a.Time > b.Time end)
+            TriggerEvent('qb-log:server:CreateLog', 'shiftlogJobLeaderboard', 'Shift Log Job Leaderboard', 'green',
+            string.format("1. %s | %s minutes \n2. %s | %s minutes \n3. %s | %s minutes",
+            JobCurrentTimes[1].Name, round(JobCurrentTimes[1].Time, 2), JobCurrentTimes[2].Name, round(JobCurrentTimes[2].Time, 2), JobCurrentTimes[3].Name, round(JobCurrentTimes[3].Time, 2)))
+            Wait(Config.leaderboard.time * 60 * 1000) -- Post log every 12 minutes
         end
-        table.sort(JobCurrentTimes, function(a, b) return a.Time > b.Time end)
-        TriggerEvent('qb-log:server:CreateLog', 'shiftlogJobLeaderboard', 'Shift Log Job Leaderboard', 'green',
-        string.format("1. %s | %s minutes \n2. %s | %s minutes \n3. %s | %s minutes",
-        JobCurrentTimes[1].Name, round(JobCurrentTimes[1].Time, 2), JobCurrentTimes[2].Name, round(JobCurrentTimes[2].Time, 2), JobCurrentTimes[3].Name, round(JobCurrentTimes[3].Time, 2)))
-        Wait(720000) -- Post log every 12 minutes
     end
 end)
 
