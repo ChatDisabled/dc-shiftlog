@@ -7,7 +7,7 @@ assignees: ChatDisabled
 
 ---
 
-**Does your feature actually have any sense inside of an admin menu?**
+**Does your feature actually have any sense in this resource?**
 Think about it.
 
 **Is your feature request related to a problem? Please describe.**
