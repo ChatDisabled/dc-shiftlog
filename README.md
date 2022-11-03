@@ -18,7 +18,6 @@ You can add as many job specific triggers as you want and add them to your QBCor
 ```
 #### Be aware! The above is case sensitive.
 
-You can always find support [here](https://discord.gg/SqRsSsSskg) in our Discord.
 ### Donations are **greatly** appreciated
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/N4N4BE29E)
 
